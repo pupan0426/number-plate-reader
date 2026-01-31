@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Live Number Plate Decoder</title>
+</head>
+<body>
+  <h2>Live Camera Feed</h2>
+  <video id="video" width="640" height="480" autoplay></video>
+  <br>
+  <button onclick="capture()">Capture & Decode</button>
+  <p>Decoded Plate: <span id="result"></span></p>
+
+  <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      });
+
+    function capture() {
+      const canvas = document.getElementById('canvas');
+      const context = canvas.getContext('2d');
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+
+      fetch('/decode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('result').innerText = data.plate;
+      });
+    }
+  </script>
+</body>
+</html>
